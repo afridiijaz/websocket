@@ -176,10 +176,6 @@ git commit -m "Added complete README.md documentation for chat app"
 git push origin real-time-chat
 ```
 
-Then visit your repo at
-👉 [https://github.com/afridiijaz/websocket/tree/real-time-chat](https://github.com/afridiijaz/websocket/tree/real-time-chat)
-and you’ll see the new README displayed beautifully.
+
 
 ---
-
-Would you like me to include a **preview section with fake chat screenshot markdown** (so it looks fancy even before you upload an image)?
