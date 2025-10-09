@@ -68,7 +68,7 @@ npm install
 npm start
 ```
 
-> The `start` command uses **nodemon** for live reloading (as defined in your package.json).
+> The `start` command uses **nodemon** for live reloading.
 
 ### 4️⃣ Open in browser
 
@@ -96,33 +96,10 @@ http://localhost:3000
 
 This ensures **real-time two-way communication** between the server and all connected clients.
 
----
-
-## 📦 Dependencies
-
-Your `package.json` includes the following dependencies:
-
-```json
-{
-  "express": "^5.1.0",
-  "nodemon": "^3.1.10",
-  "socket.io": "^4.8.1"
-}
-```
-
-Run `npm install` to install them automatically.
-
----
 
 ## 🧠 Learning Purpose
 
-This project is great for:
 
-* Understanding **Socket.IO** and real-time communication
-* Practicing event-driven programming in **Node.js**
-* Building interactive and live apps like chats, games, and notifications
-
----
 
 ## 📷 Preview
 
@@ -139,43 +116,5 @@ Contributions are welcome!
 2. Create a new branch
 3. Commit your changes
 4. Push to your branch and open a Pull Request
-
----
-
-## 🧾 License
-
-This project is open-source and available under the [MIT License](LICENSE).
-
----
-
-## 🌐 Repository
-
-GitHub Repository: [https://github.com/afridiijaz/websocket](https://github.com/afridiijaz/websocket)
-
-⭐ **If you found this helpful, please star the repository!**
-
-````
-
----
-
-### ✅ Now push this file to your branch
-
-Run these commands in your terminal:
-```bash
-git checkout real-time-chat
-echo "# README file added" > temp.txt  # optional temporary check file
-# open and create your README
-code README.md
-````
-
-Paste the above content, save, and then run:
-
-```bash
-git add README.md
-git commit -m "Added complete README.md documentation for chat app"
-git push origin real-time-chat
-```
-
-
 
 ---
