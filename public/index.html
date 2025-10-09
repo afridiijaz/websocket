@@ -5,15 +5,37 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chat App</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
     <h1>Chatting App</h1>
+    <ul id="message"></ul>
     <form id="myform" action="">
         <label for="input">Message</label>
         <input type="text" id="input" autocomplete="off">
         <button id="sendbtn">Send</button>
     </form>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io();
+        const input = document.querySelector("#input")
+        const sendBtn = document.querySelector("#sendbtn");
+        sendBtn.addEventListener('click',(e)=>{
+            e.preventDefault();
+            // firing an event ( sending msg to server)
+            socket.emit('message',input.value.trim());
+            input.value = ''
+        })
+        socket.on('message',(serverMsg)=>{
+            const li = document.createElement('li');
+            li.innerText = serverMsg;
+            const ul = document.querySelector("#message");
+            console.log(ul)
+            ul.appendChild(li);
+        })
+    </script>
 </body>
 
 </html>
