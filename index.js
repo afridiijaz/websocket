@@ -1,28 +1,44 @@
 const express = require("express");
 const { createServer } = require("node:http");
-// we are creating server using http moudle 
 const { Server } = require("socket.io");
-// used to create socket server 
+
 const app = express();
 app.use(express.static("public"));
-const server = createServer(app);
-const io = new Server(server); // this command is used to create socket.io server
 
-// base url which send index.html file to client
+const server = createServer(app);
+const io = new Server(server);
+
 app.get("/", (req, res) => {
   return res.sendFile("index.html");
 });
 
-// creating an io event 
-io.on('connection',(socket)=>{
-  console.log('A user is connected',socket.id)
-  // here message is the key which is passed from the client side 
-  socket.on('message',(clientMsg)=>{
-    console.log('client message ',clientMsg)
-    io.emit('message',clientMsg);
-  })
-})
+io.on('connection', (socket) => {
+  console.log('A user connected:', socket.id);
+
+  // Store username on join
+  socket.on('user-joined', (username) => {
+    socket.username = username;
+    // Notify everyone ELSE
+    socket.broadcast.emit('user-joined', username);
+    console.log(`${username} joined the chat`);
+  });
+
+  // { text, sender } message object
+  socket.on('message', (data) => {
+    console.log(`[${data.sender}]: ${data.text}`);
+    // Broadcast to all OTHER clients (sender appends their own bubble client-side)
+    socket.broadcast.emit('message', data);
+  });
+
+  socket.on('disconnect', () => {
+    if (socket.username) {
+      io.emit('user-left', socket.username);
+      console.log(`${socket.username} disconnected`);
+    }
+  });
+});
 
 server.listen(3000, () => {
-  console.log("server is listening on the port 3000 ");
+  console.log("Server is listening on port 3000");
 });
+

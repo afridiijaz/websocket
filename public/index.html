@@ -4,37 +4,158 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chat App</title>
+    <title>ChatRoom</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
-    <h1>Chatting App</h1>
-    <ul id="message"></ul>
-    <form id="myform" action="">
-        <label for="input">Message</label>
-        <input type="text" id="input" autocomplete="off">
-        <button id="sendbtn">Send</button>
-    </form>
+
+    <!-- ===== Username Modal ===== -->
+    <div id="username-modal" class="modal-overlay">
+        <div class="modal-box">
+            <div class="modal-icon">💬</div>
+            <h2>Welcome to ChatRoom</h2>
+            <p>Enter your name to join the conversation</p>
+            <input type="text" id="username-input" placeholder="Your name..." maxlength="20" autocomplete="off">
+            <button id="join-btn">Join Chat</button>
+        </div>
+    </div>
+
+    <!-- ===== Main Chat UI ===== -->
+    <div class="chat-wrapper">
+
+        <!-- Header -->
+        <div class="chat-header">
+            <div class="header-left">
+                <div class="app-icon">💬</div>
+                <div class="header-info">
+                    <h1>ChatRoom</h1>
+                    <span class="status"><span class="dot"></span>Live</span>
+                </div>
+            </div>
+            <div class="header-right">
+                <span id="user-badge"></span>
+            </div>
+        </div>
+
+        <!-- Messages List -->
+        <ul id="message"></ul>
+
+        <!-- Input Area -->
+        <div class="input-area">
+            <form id="myform">
+                <input type="text" id="input" placeholder="Type a message..." autocomplete="off">
+                <button id="sendbtn" type="submit" title="Send">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
+                        <path d="M3.478 2.405a.75.75 0 00-.926.94l2.432 7.905H13.5a.75.75 0 010 1.5H4.984l-2.432 7.905a.75.75 0 00.926.94 60.519 60.519 0 0018.445-8.986.75.75 0 000-1.218A60.517 60.517 0 003.478 2.405z"/>
+                    </svg>
+                </button>
+            </form>
+        </div>
+
+    </div>
 
     <script src="/socket.io/socket.io.js"></script>
     <script>
-        const socket = io();
-        const input = document.querySelector("#input")
-        const sendBtn = document.querySelector("#sendbtn");
-        sendBtn.addEventListener('click',(e)=>{
-            e.preventDefault();
-            // firing an event ( sending msg to server)
-            socket.emit('message',input.value.trim());
-            input.value = ''
-        })
-        socket.on('message',(serverMsg)=>{
+        // ── Username Modal ──────────────────────────────────────
+        let username = '';
+        const modal        = document.getElementById('username-modal');
+        const usernameInput = document.getElementById('username-input');
+        const joinBtn      = document.getElementById('join-btn');
+        const userBadge    = document.getElementById('user-badge');
+
+        usernameInput.focus();
+
+        function joinChat() {
+            const name = usernameInput.value.trim();
+            if (!name) {
+                usernameInput.classList.add('shake');
+                setTimeout(() => usernameInput.classList.remove('shake'), 400);
+                return;
+            }
+            username = name;
+            userBadge.textContent = '👤 ' + username;
+            modal.style.opacity = '0';
+            modal.style.pointerEvents = 'none';
+            setTimeout(() => modal.style.display = 'none', 300);
+            socket.emit('user-joined', username);
+            document.getElementById('input').focus();
+        }
+
+        joinBtn.addEventListener('click', joinChat);
+        usernameInput.addEventListener('keydown', e => { if (e.key === 'Enter') joinChat(); });
+
+        // ── Socket ──────────────────────────────────────────────
+        const socket      = io();
+        const input       = document.getElementById('input');
+        const form        = document.getElementById('myform');
+        const messageList = document.getElementById('message');
+
+        function getTime() {
+            return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        }
+
+        function appendMessage(text, type, senderName) {
+            const li     = document.createElement('li');
+            li.classList.add('message-item', type);
+
+            const bubble = document.createElement('div');
+            bubble.classList.add('bubble');
+
+            if (type === 'received' && senderName) {
+                const nameEl = document.createElement('span');
+                nameEl.classList.add('sender-name');
+                nameEl.textContent = senderName;
+                bubble.appendChild(nameEl);
+            }
+
+            const textEl = document.createElement('span');
+            textEl.classList.add('message-text');
+            textEl.textContent = text;
+
+            const timeEl = document.createElement('span');
+            timeEl.classList.add('message-time');
+            timeEl.textContent = getTime();
+
+            bubble.appendChild(textEl);
+            bubble.appendChild(timeEl);
+            li.appendChild(bubble);
+            messageList.appendChild(li);
+            messageList.scrollTop = messageList.scrollHeight;
+        }
+
+        function appendSystem(text) {
             const li = document.createElement('li');
-            li.innerText = serverMsg;
-            const ul = document.querySelector("#message");
-            console.log(ul)
-            ul.appendChild(li);
-        })
+            li.classList.add('system-msg');
+            li.textContent = text;
+            messageList.appendChild(li);
+            messageList.scrollTop = messageList.scrollHeight;
+        }
+
+        form.addEventListener('submit', e => {
+            e.preventDefault();
+            const msg = input.value.trim();
+            if (!msg || !username) return;
+            socket.emit('message', { text: msg, sender: username });
+            appendMessage(msg, 'sent', username);
+            input.value = '';
+        });
+
+        socket.on('message', data => {
+            if (data.sender !== username) {
+                appendMessage(data.text, 'received', data.sender);
+            }
+        });
+
+        socket.on('user-joined', name => {
+            appendSystem(`${name} joined the chat ✨`);
+        });
+
+        socket.on('user-left', name => {
+            appendSystem(`${name} left the chat`);
+        });
     </script>
 </body>
 
